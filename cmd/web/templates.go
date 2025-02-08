@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 
 	"snippetbox.siddheshsuryawanshi.net/internal/models"
 )
@@ -12,8 +13,17 @@ import (
 // At the moment it only contains one field, but we'll add more
 // to it as the build progresses.
 type templateData struct {
-	Snippet  *models.Snippet
-	Snippets []*models.Snippet
+	CurrentYear int
+	Snippet     *models.Snippet
+	Snippets    []*models.Snippet
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -29,19 +39,22 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 
 		name := filepath.Base(page)
-
-		files := []string{
-			"./ui/html/base.tmpl",
-			"./ui/html/partials/nav.tmpl",
-			page,
-		}
-
-		ts, err := template.ParseFiles(files...)
+		// Parse the base template file into a template set.
+		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl")
 		if err != nil {
 			return nil, err
 		}
-		// Add the template set to the map, using the name of the page
-		// (like 'home.tmpl') as the key.
+		// Call ParseGlob() *on this template set* to add any partials.
+		ts, err = ts.ParseGlob("./ui/html/partials/*.tmpl")
+		if err != nil {
+			return nil, err
+		}
+		// Call ParseFiles() *on this template set* to add the page template.
+		ts, err = ts.ParseFiles(page)
+		if err != nil {
+			return nil, err
+		}
+		// Add the template set to the map as normal...
 		cache[name] = ts
 	}
 
