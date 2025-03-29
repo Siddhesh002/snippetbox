@@ -9,6 +9,12 @@
 </div>
 <div>
 {{if .IsAuthenticated}}
+<form action='/account/view' method='GET'>
+<!-- Include the CSRF token -->
+<input type='hidden' name='csrf_token'
+value='{{.CSRFToken}}'>
+<button>Account</button>
+</form>
 <form action='/user/logout' method='POST'>
 <!-- Include the CSRF token -->
 <input type='hidden' name='csrf_token'

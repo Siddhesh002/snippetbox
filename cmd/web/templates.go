@@ -16,6 +16,7 @@ import (
 // to it as the build progresses.
 type templateData struct {
 	CurrentYear     int
+	User            *models.User
 	Snippet         *models.Snippet
 	Snippets        []*models.Snippet
 	Form            any
